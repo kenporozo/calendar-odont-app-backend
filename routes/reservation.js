@@ -10,8 +10,9 @@ router.get("/reservations", getReservations);
 
 router.post("/reservations", [
     check("user")
-    .notEmpty()
-    .withMessage("El usuario asociado es obligatorio")
+    .optional()
+    .isMongoId()
+    .withMessage("El usuario no tiene un id valido")
     .bail(),
     check("start")
     .custom(isValidDate)
@@ -27,25 +28,60 @@ router.post("/reservations", [
     .bail()
     .custom(existDentistById)
     .bail(),
+    check("name")
+    .optional()
+    .notEmpty()
+    .withMessage("El nombre es obligatorio")
+    .bail(),
+    check("lastname")
+    .optional()
+    .notEmpty()
+    .withMessage("El apellido es obligatorio")
+    .bail(),
+    check("rut")
+    .optional()
+    .notEmpty()
+    .withMessage("El rut es obligatorio")
+    .bail(),
+    check("email")
+    .optional()
+    .isEmail()
+    .withMessage("Email incorrecto")
+    .bail(),
+    check("phone")
+    .optional()
+    .notEmpty()
+    .withMessage("El telefono es obligatorio")
+    .bail(),
     validation
 ], insertReservation)
 
-router.put("/reservations/:id", [
-    check("id")
+router.put("/reservations/:reservationId", [
+    check("reservationId")
     .isMongoId()
     .withMessage("ID no valido")
     .bail()
     .custom(existReservationById)
     .bail(),
+    check("userId")
+    .optional()
+    .isMongoId()
+    .withMessage("Id de usuario no valido")
+    .bail(),
     validation
 ], updateReservation);
 
-router.delete("/reservations/:id", [
-    check("id")
+router.delete("/reservations/:reservationId", [
+    check("reservationId")
     .isMongoId()
     .withMessage("ID no valido")
     .bail()
     .custom(existReservationById)
+    .bail(),
+    check("userId")
+    .optional()
+    .isMongoId()
+    .withMessage("Id de usuario no valido")
     .bail(),
     validation
 ], deleteReservation);

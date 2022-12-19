@@ -1,9 +1,22 @@
 const { Schema, model } = require('mongoose');
 
-const UserSubSchema = Schema({
-    id: {
+const ReservationSchema = Schema({
+    start: {
+        type: Date,
+        required: true
+    },
+    end: {
+        type: Date,
+        required: true
+    },
+    user:{
         type: Schema.Types.ObjectId,
         ref: "User"
+    },
+    dentist: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: "Dentist"
     },
     name: {
         type: String
@@ -19,38 +32,14 @@ const UserSubSchema = Schema({
     },
     phone: {
         type: String
-    }
-});
-
-UserSubSchema.methods.toJSON = function() {
-    const {__v, _id, ...userSubSchema} = this.toObject();
-    return userSubSchema;
-}
-
-const ReservationSchema = Schema({
-    user: {
-        type: UserSubSchema,
-        required: true
     },
-    start: {
-        type: Date,
-        required: true
-    },
-    end: {
-        type: Date,
-        required: true
-    },
-    dentist: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: "Dentist"
+    ip: {
+        type: String
     }
 });
 
 ReservationSchema.methods.toJSON = function() {
-    const {__v, user, ...reservation} = this.toObject();
-    const {_id, ...cleanUser} = user;
-    reservation.user = cleanUser;
+    const {__v, ...reservation} = this.toObject();
     return reservation;
 }
 
