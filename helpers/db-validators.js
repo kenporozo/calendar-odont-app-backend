@@ -54,6 +54,16 @@ const existReservationById = async (id) =>{
     }
 }
 
+const existReservationByDate = async (start = '', dentist = 'f') =>{
+    console.log("start" , new Date(start));
+    console.log("dentist" , dentist.req.body.dentist);
+    const existReservationByDate = await Reservation.findOne({start: new Date(start), dentist: dentist.req.body.dentist});
+    if(existReservationByDate){
+        throw new Error(`La hora ${start} ya esta tomada`);
+    }
+}
+
+
 module.exports = {
     isRoleValid,
     existUserByEmail,
@@ -61,5 +71,6 @@ module.exports = {
     existUserById,
     existDentistByRut,
     existDentistById,
-    existReservationById
+    existReservationById,
+    existReservationByDate
 }

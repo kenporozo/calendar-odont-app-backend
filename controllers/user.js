@@ -2,6 +2,7 @@ const { response, request } = require("express");
 const { compareSync, genSaltSync, hashSync } = require("bcryptjs");
 const createJWT = require("../auth/JWT");
 const User = require("../models/user");
+const { transporter } = require("../helpers/mailer.config");
 
 const getUsers = async (req = request, res = response) => {
   const users = await User.find();
@@ -19,10 +20,23 @@ const createUser = async (req = request, res = response) => {
     user.password = hashSync(user.password, salt);
 
     await user.save();
+    
+    const token = await createJWT(user);
+
+    transporter.sendMail({
+      from: '<jonayker.rozo@inacapmail.cl>',
+      to: user.email,
+      subject: "Bienvenido a Odontofeliz!!",
+      html: `
+        <h1>Estimado ${user.name}, bienvenido a nuestra plataforma 👻<h1>
+      `,
+    });
 
     return res.status(201).json({
       msg: "Usuario creado con exito",
       uid: user.id,
+      token,
+      user
     });
   } catch (error) {
     console.log(error);
@@ -84,7 +98,7 @@ const login = async (req = request, res = response) => {
 
     res.json({
       uid: user.id,
-      name: user.name,
+      user,
       token,
     });
   } catch (error) {

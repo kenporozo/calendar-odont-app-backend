@@ -7,11 +7,7 @@ const { existDentistByRut, existDentistById } = require("../helpers/db-validator
 
 const router = Router();
 
-router.get("/dentists",[
-    validateToken,
-    hasRoles("ADMIN_ROLE"),
-    validation
-], getDentists)
+router.get("/dentists", getDentists)
 
 router.post("/dentists", [
     check("name")

@@ -1,31 +1,46 @@
+const e = require("express");
 const { response, request } = require("express");
 const Reservation = require("../models/reservation");
+const User = require("../models/user");
+const { transporter } = require("../helpers/mailer.config");
 
 const getReservations = async (req = request, res = response) => {
-
-  console.log(req.ip);
   const reservations = await Reservation.find()
     .populate("dentist", "_id name lastname")
-    .populate("user", "_id name lastname");
+    .populate("user", "_id name lastname rut");
 
   res.json({
-    reservations
+    reservations,
   });
 };
 
 const insertReservation = async (req = request, res = response) => {
   try {
     let reservation = new Reservation(req.body);
+    let user;
 
-    if(!req.body.user){
+    if (req.body.user) {
+      user = await User.findById(req.body.user);
+    } else {
       reservation.ip = req.ip;
     }
 
     await reservation.save();
 
+    transporter.sendMail({
+      from: "<jonayker.rozo@inacapmail.cl>",
+      to: reservation.email || user.email,
+      subject: "Notificacion de reserva!!",
+      html: `
+        <h1>Estimado ${
+          reservation.name || user.name
+        }, reserva creada con exito para el dia ${reservation.start} 👻<h1>
+      `,
+    });
     return res.status(201).json({
       msg: "Reserva creada con exito",
       uid: reservation.id,
+      reservation,
     });
   } catch (error) {
     console.log(error);
@@ -35,6 +50,18 @@ const insertReservation = async (req = request, res = response) => {
   }
 };
 
+const getReservationsByDentistId = async (req = request, res = response) => {
+  const { dentistId } = req.params;
+
+  const reservations = await Reservation.find({ dentist: dentistId })
+    .populate("dentist", "_id name lastname")
+    .populate("user", "_id name lastname rut");
+
+  return res.json({
+    reservations,
+  });
+};
+
 const updateReservation = async (req = request, res = response) => {
   try {
     const { reservationId } = req.params;
@@ -42,20 +69,6 @@ const updateReservation = async (req = request, res = response) => {
     const { userId, ...reservation } = req.body;
 
     const reserve = await Reservation.findById(reservationId);
-
-    if(userId){
-      if(reserve.user.toString() !== userId){
-        return res.status(401).json({
-          msg: "Privilegios insuficientes (User id distinto)"
-        });
-      }
-    }else{
-      if(reserve.ip !== req.ip){
-        return res.status(401).json({
-          msg: "Privilegios insuficientes (Ip disintinta)"
-        });
-      }
-    }
 
     await Reservation.findByIdAndUpdate(reservationId, reservation);
 
@@ -72,28 +85,8 @@ const updateReservation = async (req = request, res = response) => {
 
 const deleteReservation = async (req = request, res = response) => {
   const { reservationId } = req.params;
-  const { userId } = req.query; 
   try {
-    const reserve = await Reservation.findById(reservationId);
-
-    console.log(reserve);
-
-    if(userId){
-      if(reserve.user.toString() !== userId){
-        return res.status(401).json({
-          msg: "Privilegios insuficientes (User id distinto)"
-        });
-      }
-    }else{
-      if(reserve.ip !== req.ip){
-        return res.status(401).json({
-          msg: "Privilegios insuficientes (Ip disintinta)"
-        });
-      }
-    }
-  
     await Reservation.findByIdAndDelete(reservationId);
-    
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -107,8 +100,9 @@ const deleteReservation = async (req = request, res = response) => {
 };
 
 module.exports = {
-    getReservations,
-    insertReservation,
-    updateReservation,
-    deleteReservation
-}
+  getReservations,
+  insertReservation,
+  updateReservation,
+  deleteReservation,
+  getReservationsByDentistId,
+};

@@ -1,12 +1,20 @@
 const { Router } = require("express");
 const { check } = require("express-validator");
 const { validation, isValidDate } = require("../middlewares/validations");
-const { getReservations, insertReservation, updateReservation, deleteReservation } = require("../controllers/reservation");
-const { existDentistById, existReservationById } = require("../helpers/db-validators");
+const { getReservations, insertReservation, updateReservation, deleteReservation, getReservationsByDentistId } = require("../controllers/reservation");
+const { existDentistById, existReservationById, existReservationByDate } = require("../helpers/db-validators");
 
 const router = Router();
 
 router.get("/reservations", getReservations);
+
+router.get("/reservations/:dentistId",[
+    check("dentistId")
+    .isMongoId()
+    .withMessage("ID no valido")
+    .bail(),
+    validation
+], getReservationsByDentistId);
 
 router.post("/reservations", [
     check("user")
@@ -17,6 +25,9 @@ router.post("/reservations", [
     check("start")
     .custom(isValidDate)
     .withMessage("La fecha no es valida")
+    .bail()
+    .custom(existReservationByDate)
+    .withMessage("La hora de reserva ya esta registrada")
     .bail(),
     check("end")
     .custom(isValidDate)

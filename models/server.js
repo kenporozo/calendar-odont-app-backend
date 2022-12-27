@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const morgan = require("morgan");
+const { morganFormat } = require("../middlewares/morgan.config");
 const {getConnection} = require('../database/config');
 
 class Server {
@@ -27,6 +29,9 @@ class Server {
 
     //Directorio Público
     this.app.use(express.static("public"));
+
+     //Morgan
+     this.app.use(morgan(morganFormat));
 
     this.app.use(express.urlencoded({ extended: true }));
   }
