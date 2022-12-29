@@ -12,11 +12,11 @@ const insertDentist = async (req = request, res = response) => {
   try {
     let dentist = new Dentist(req.body);
 
-    await dentist.save();
+    let dentistCreated = await dentist.save();
 
     return res.status(201).json({
       msg: "Dentista creado con exito",
-      uid: dentist.id,
+      dentist: dentistCreated,
     });
   } catch (error) {
     console.log(error);
@@ -34,8 +34,11 @@ const updateDentist = async (req = request, res = response) => {
 
     await Dentist.findByIdAndUpdate(id, dentist);
 
+    let dentistUpdated = await Dentist.findById(id);
+
     res.json({
       msg: `Dentista con id ${id} actualizado correctamente`,
+      dentist: dentistUpdated
     });
   } catch (error) {
     console.log(error);
@@ -50,8 +53,11 @@ const deleteDentist = async (req = request, res = response) => {
 
   await Dentist.findByIdAndUpdate(id, { isActive: false });
 
+  let dentistDeleted = await Dentist.findById(id);
+
   res.json({
     msg: `Dentista con id ${id} desactivado`,
+    dentist: dentistDeleted
   });
 };
 
